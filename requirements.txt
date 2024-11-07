@@ -14,3 +14,4 @@ six==1.16.0
 tzdata==2024.2
 hockey_scraper
 pyarrow
+tqdm
