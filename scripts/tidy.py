@@ -5,13 +5,9 @@ import re
 shifts = pd.read_parquet('./data/shift_combined.parquet')
 pbp = pd.read_parquet('./data/pbp_combined.parquet')
 
-games = pbp[['Game_Id', 'Date', 'Home_Team', 'Home_Coach', 'Away_Team', 'Away_Coach']].drop_duplicates()
-pbp.drop(columns=['Date', 'Home_Team', 'Home_Coach', 'Away_Team', 'Away_Coach'], inplace=True)
-
-
-gend_events = pbp[(pbp['Event'] == 'GEND')]
-gend_events = gend_events[['Game_Id', 'Period', 'Away_Score', 'Home_Score']]
-games = games.merge(gend_events, on='Game_Id', how='left')
+games = pbp[['Game_Id', 'Date', 'Home_Team', 'Home_Coach', 'Away_Team', 'Away_Coach', 'Event', 'Period', "Home_Score", "Away_Score"]]
+games = games[games["Event"] == "GEND"]
+games.drop(columns=['Event'], inplace=True)
 
 players = [[f"homePlayer{pNum}", f"homePlayer{pNum}_id"] for pNum in range(1, 6)]
 players += [[f"awayPlayer{pNum}", f"awayPlayer{pNum}_id"] for pNum in range(1, 6)]
