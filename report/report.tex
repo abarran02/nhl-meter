@@ -1,0 +1,82 @@
+\documentclass{article}
+\usepackage{graphicx} % Required for inserting images
+\usepackage{cite}
+\usepackage{setspace}
+
+\title{NHL Meter}
+\author{Alexander Hagood \& Alexander Barran}
+\date{November 2024}
+\doublespacing
+\begin{document}
+
+\maketitle
+
+\section{Abstract}
+The objective of this project is to provide a system that can provide live estimations
+about the outcomes of a National Hockey League (NHL) game. Using statistical and
+machine learning methods, we were able to create a model that can ???
+\section{Introduction}
+Inspired by visualizations like the Win Probability graph provided by ESPN, we sought
+out to create a similar metric based on Hockey play by play data sourced from the NHL.
+We would like to use information about the state of the game, such as the current 
+score, 'momentum,' and other factors that can be derived from the data to determine 
+the odds of the home team winning at any arbitrary point in the game. Sports are 
+inherently unpredictable, however we can still make educated guesses at the chances 
+of specific outcomes based on information we have. Our approach is to stream in ‘Play-By-Play’ 
+data representing certain game events into our model, and then use statistical and machine 
+learning techniques like ??? to update our estimation on who is more likely to win as we 
+gain more information about the flow of the game.
+
+
+\section{Problem Definition}
+Given the Play-By-Play data for a specific NHL match up to a certain time point, 
+what is the probability of the Home or Away team winning? With the rise of the sports 
+betting industry, these types of endeavors have grown in popularity and interest on 
+both the bettor and bookkeepers sides, as bettors seek new edges and bookkeepers seek 
+to set more accurate lines. Estimations of NHL outcomes are not new, but from our research 
+there is no investigation into the dynamic estimation as the game is played. Measuring
+this probability can give us insight into the nature of how an underdog team might
+beat a strong team, or show how dominant a strong team can control the game.
+
+
+\section{Models, Algorithms and Measures}
+
+\section{Implementation and Analysis}
+Our data is sourced from the official NHL API. This allows you to get historical play-by-play 
+data from games since the 2007 season using HTTP requests. Using a Game ID, you can download 
+all the games for a specific season. Thankfully, there exists an existing python implementation 
+that scrapes this data. 'hockey-scraper' by harryshomer on pypi allows you to input a season
+or a date range, and will download the season information then all associated plays with
+each game in that season. This is a somewhat large amount of data, taking multiple days to 
+download due to API rate limiting. Post-parquet compression, the data including play-by-play
+and shifts (documenting when a player comes on or off the ice) took up approximately half a gigabyte.
+
+Analyzing the format of the data, we can view useful information about the game. A "play" is 
+recorded whenever a notable event occurs. These events can take forms like a shot on goal, 
+a successful goal, the result of a face off, penalties, or other associated game events. 
+For every play, all players that were involved are listed, as well as all other players on 
+the ice at the time. Spatial data is included, such as the X and Y coordinates on the rink 
+where the event happened, and of course information about the game itself such as the current 
+score, the teams, and the time remaining in the period.
+
+In order to start adjusting the probability of a given team winning, you need a beginning assumption.
+You could just assume that each time has an equal chance of winning, but this naive assumption 
+neglects variables such as the strength of a team. In order to get a rough estimate of likelihood 
+to win, we can use a system like Elo. Elo is a metric that lets us measure the comparative strength 
+of teams, derived from their record so far in the season. When you win, you get Elo points scaled 
+to the differential between you and your opponents Elo score, and you lose points upon a loss. Using the formula 
+\[E_{A} = \frac{1}{1 + 10^{(R_{B} - R_{A})/400}}\] we can calculate the percentage chance of a given team beating another.
+This is a good starting point for our estimation, and now we can adjust this probability
+as the game goes on to get a more accurate estimate of the outcome. 
+
+\section{Related Work}
+Similar work in this field has been done for other sports, such as the aforementioned ESPN Win Probability graph.
+Some of the most useful work in this field has been done by groups studying Soccer like American Soccery Analysis using a 
+machine learning based approach \cite{richardett} or research by Robberechts et al \cite{bayesian} using bayesian methods. Soccer
+is a much more translatable sport to our problem, as it is also a low scoring game with a similar gameplay flow to hockey.
+These works served as useful inspiration and insight into how we could develop an approach to predict the outcomes of hockey games.
+
+\nocite{*}
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+\end{document}

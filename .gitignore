@@ -164,3 +164,15 @@ cython_debug/
 # NHL datasets
 *_combined.parquet
 pbp/
+
+
+# latex
+*.aux
+*.fdb_latexmk
+*.synctex.gz
+*.fls
+*.pdf
+*.bbl
+*.blg
+*.tex
+*.bst
