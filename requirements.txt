@@ -15,3 +15,5 @@ tzdata==2024.2
 hockey_scraper
 pyarrow
 tqdm
+elosports
+scikit-learn

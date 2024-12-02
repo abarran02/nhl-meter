@@ -4,8 +4,8 @@ import re
 from datetime import datetime, timedelta
 from tqdm import tqdm
 
-shifts = pd.read_parquet('./data/shift_combined.parquet')
-pbp = pd.read_parquet('./data/pbp_combined.parquet')
+shifts = pd.read_parquet('./scripts/data/shift_combined.parquet')
+pbp = pd.read_parquet('./scripts/data/pbp_combined.parquet')
 
 pbp['Date'] = pd.to_datetime(pbp['Date'])
 
@@ -20,7 +20,7 @@ for row in pbp.itertuples(index=True):
     season_list.append(season)
 pbp['Season'] = season_list
 
-games = pbp[['Game_Id', 'Date', 'Home_Team', 'Home_Coach', 'Away_Team', 'Away_Coach', 'Event', 'Period', "Home_Score", "Away_Score"]]
+games = pbp[['Game_Id', 'Date', 'Home_Team', 'Home_Coach', 'Away_Team', 'Away_Coach', 'Event', 'Period', "Home_Score", "Away_Score", 'Season']]
 games = games[games["Event"] == "GEND"]
 games.drop(columns=['Event'], inplace=True)
 
@@ -47,6 +47,6 @@ pbp.columns = [re.sub(r'(away|home)Player(\d)_id', lambda m: f"{m.group(1).title
 pbp.columns = [re.sub(r'p(\d)_(ID|name)', lambda m: f"p{m.group(1)}_{m.group(2).title()}", col) for col in pbp.columns]
 
 
-games.to_parquet('./data/games.parquet', index=False)
-playerframe.to_parquet('./data/players.parquet', index=False)
-pbp.to_parquet('./data/pbp_reduced.parquet', index=False)
+games.to_parquet('./scripts/data/games.parquet', index=False)
+playerframe.to_parquet('./scripts/data/players.parquet', index=False)
+pbp.to_parquet('./scripts/data/pbp_reduced.parquet', index=False)
