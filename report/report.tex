@@ -24,8 +24,8 @@ the odds of the home team winning at any arbitrary point in the game. Sports are
 inherently unpredictable, however we can still make educated guesses at the chances 
 of specific outcomes based on information we have. Our approach is to stream in ‘Play-By-Play’ 
 data representing certain game events into our model, and then use statistical and machine 
-learning techniques like ??? to update our estimation on who is more likely to win as we 
-gain more information about the flow of the game.
+learning techniques like logistic regresion and machine learning to update our estimation on who
+is more likely to win as we gain more information about the state of the game.
 
 
 \section{Problem Definition}
@@ -35,11 +35,20 @@ betting industry, these types of endeavors have grown in popularity and interest
 both the bettor and bookkeepers sides, as bettors seek new edges and bookkeepers seek 
 to set more accurate lines. Estimations of NHL outcomes are not new, but from our research 
 there is no investigation into the dynamic estimation as the game is played. Measuring
-this probability can give us insight into the nature of how an underdog team might
-beat a strong team, or show how dominant a strong team can control the game.
+this probability can give us insight into the nature the moment an underdog team might
+turn the tables on a strong team, or show how a dominant team can maintain control of the game.
 
 
 \section{Models, Algorithms and Measures}
+
+In order to measure the comparative strength of two teams, it is not neccesary to reinvent the wheel. 
+Elo is a metric that lets us quantify this strength in a of teams, derived from the results of previous head to head match ups.
+Upon completing a game, you receive Elo score corresponding to the difference between your score and your opponents. Win a game against
+an opponent with a much higher score, and you receive more points than winning one with a lower score, and vice versa for losing.
+Once you have these scores, you can measure the probability of a given team winning against another in a match up. 
+Using the following formula we can determien the probability of a given Elo matchup resulting in a win.
+\[E_{A} = \frac{1}{1 + 10^{(R_{B} - R_{A})/400}}\] 
+
 
 \section{Implementation and Analysis}
 Our data is sourced from the official NHL API. This allows you to get historical play-by-play 
@@ -61,13 +70,32 @@ score, the teams, and the time remaining in the period.
 
 In order to start adjusting the probability of a given team winning, you need a beginning assumption.
 You could just assume that each time has an equal chance of winning, but this naive assumption 
-neglects variables such as the strength of a team. In order to get a rough estimate of likelihood 
-to win, we can use a system like Elo. Elo is a metric that lets us measure the comparative strength 
-of teams, derived from their record so far in the season. When you win, you get Elo points scaled 
-to the differential between you and your opponents Elo score, and you lose points upon a loss. Using the formula 
-\[E_{A} = \frac{1}{1 + 10^{(R_{B} - R_{A})/400}}\] we can calculate the percentage chance of a given team beating another.
-This is a good starting point for our estimation, and now we can adjust this probability
-as the game goes on to get a more accurate estimate of the outcome. 
+neglects variables such as the strength of a team. We use the Elo system to determine this assumption. Starting in the 2007 season, we gave each team a 
+base level of 1500 Elo, and then started feeding in the results of their match ups. Teams do maintain some level
+of continuity between seasons, so instead of starting from scratch we simply shifted their Elo scores towards the baseline, 
+instead of completing reseting them. When it comes time to analyze the a specific game, we can now feed in this Elo score to get a baseline expectation of win probability.
+
+Using our Elo score at the beginning of a game, we can, we can start to adjust it based on game events. First, we subdivide the
+game into discrete time slices of 30 seconds. We can then recrord the events of importance that occur during those time slices
+such as goals or penalties. Using these events we can update a 'strength' score for the team. This strength score can help predict how
+likely a team is to score in the near future. 
+
+Testing our model is not as simple as one might think, as there is clearly no objective answer representing the true probability of a team winning given
+a given set of circumstances that we can compare our results to. However, we can measure how accurately our model can predict probabilties in aggregate by 'backtesting' it.
+There are two different methodologies we came up with to backtest our model. 
+
+The first type we came up with is through using statistical regression methods. 
+First, we group together games or plays with similar expected outcomes, such as all games around 70\% home team win probability. We can then see measure how often
+the home team won in this set of games, and compare it to our model's prediction. We repeat this for all probability 'buckets' which can be at any arbitrary precision.
+Once we have the True win rate, and the expected win rate, we can perform statistical methods to such as sum of least squares or logistic loss. These functions measure 'Goodness of Fit,' 
+or generally represent how accurate our model is. 
+
+There exists other types of backtesting that we can apply that are called 'scoring rules.' These are evaluation metrics that can be used to evaluate the accuracy of probabilistic predictions.
+These types of scoring rules are highly applicable to our project, as we are directly making these types of forecasts and would like to measure their accuracy. By using these rules we can attempt to
+minimize our distance from true probability. The scoring function we used is called Ranked Probability Score. 
+
+
+
 
 \section{Related Work}
 Similar work in this field has been done for other sports, such as the aforementioned ESPN Win Probability graph.
