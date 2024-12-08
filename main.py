@@ -57,6 +57,14 @@ class NHL_METER:
         res = -1 / len(analyzed)
         return res * total
     
+    def ranked_probability(self, data):
+        all_rps = []
+        for i, row in data.iterrows():
+            rps = 1/2 * (row["Win_Prob"] - row["Home_Won"])**2
+            all_rps.append(rps)
+        return all_rps.mean()
+
+    
     # 
     def backtest(self, plays, loss_func):
         binned_plays = self.bin_winprob(plays)
