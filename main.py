@@ -4,9 +4,9 @@ import math
 
 class NHL_METER:
     def __init__(self):
-        self.games = pd.read_parquet('./data/games.parquet')
-        self.pbp = pd.read_parquet('./data/pbp_reduced.parquet')
-        self.games["Game_Id"] = self.games["Game_Id"].astype("Int64")
+        # self.games = pd.read_parquet('../data/games.parquet')
+        # self.pbp = pd.read_parquet('../data/pbp_reduced.parquet')
+        # self.games["Game_Id"] = self.games["Game_Id"].astype("Int64")
         pass
 
     def get_pbp(self, game_id, season):
@@ -34,25 +34,26 @@ class NHL_METER:
     
     # returns [(actual, predicted)]
     # pass in result from bin_winprob
-    def analyze_accuracy(self, binned):
+    def analyze_accuracy(self, binned, nans=False):
         trueWin = []
         for i, df in enumerate(binned):
             winProp = df["Home_Won"].mean()
-            if (math.isnan(winProp)):
+            if (math.isnan(winProp) and not nans):
                 winProp = 0.0
             est = (i + .5) / len(binned)
             #print(f"Estimated: {est}, Actual: {winProp}")
             trueWin.append((est, winProp))
         return trueWin
     
+    def accBins(self, data, bc=10):
+        return self.analyze_accuracy(self.bin_winprob(data, bc), nans=True)
+    
     def least_squares(self, analyzed):
         return sum([(x[0]-x[1])**2 for x in analyzed])
 
     def log_loss(self, analyzed):
         total = 0
-        for index, row in analyzed.iterrows():
-            actual = row["Home_Won"]
-            predicted = row["Win_Prob"]
+        for predicted, actual  in analyzed:
             total += (actual * math.log(predicted) + (1 - actual) * math.log(1 - predicted))
         res = -1 / len(analyzed)
         return res * total
@@ -62,12 +63,9 @@ class NHL_METER:
         for i, row in data.iterrows():
             rps = 1/2 * (row["Win_Prob"] - row["Home_Won"])**2
             all_rps.append(rps)
-        return all_rps.mean()
-
+        return sum(all_rps) / len(data)
     
-    # 
     def backtest(self, plays, loss_func):
-        binned_plays = self.bin_winprob(plays)
+        binned_plays = self.bin_winprob(plays, binCount=100)
         analyzed = self.analyze_accuracy(binned_plays)
         return loss_func(analyzed)
-    

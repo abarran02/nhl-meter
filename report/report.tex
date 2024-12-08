@@ -2,6 +2,7 @@
 \usepackage{graphicx} % Required for inserting images
 \usepackage{cite}
 \usepackage{setspace}
+\usepackage{verbatimbox}
 
 \title{NHL Meter}
 \author{Alexander Hagood \& Alexander Barran}
@@ -95,6 +96,21 @@ These types of scoring rules are highly applicable to our project, as we are dir
 minimize our distance from true probability. The scoring function we used is called Ranked Probability Score. 
 
 
+\begin{minipage}{0.45\textwidth}
+  \vspace*{0pt}
+  \centering
+  \begin{verbatim}
+    Sum of Least Squares: 12.2505
+    Cross Entropy: 0.8863
+    Ranked Probability Score: 0.1228
+  \end{verbatim}
+  \end{minipage}
+  \hfill
+  \begin{minipage}{0.45\textwidth}
+  \includegraphics[width=2\textwidth]{elo_residuals.png}\\
+
+\end{minipage}
+  
 
 
 \section{Related Work}
