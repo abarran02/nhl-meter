@@ -142,12 +142,82 @@ The scoring function we used is called Ranked Probability Score.
 \end{minipage}
 
 \section{Results and Discussion}
+The trained model can now approach the game state time series data to plot a team's win probability over time.
+Three types of games will be the most interesting to analyze: comebacks, blowouts, and late go-ahead goals.
+
+In the 2010 NHL Playoffs, the Philadelphia Flyers were once down 0-3 in their series against the Boston Bruins.
+The Flyers rallied to force a Game 7, but fell to a score of 0-3 during the first period.
+Over the next forty-five minutes, the Flyers put up four goals against the Bruins to advance to the Eastern Conference Final.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\linewidth]{2009030227.png}
+    \caption{Philadelphia Flyers at Boston Bruins, 14 May 2010}
+    \label{fig:comeback}
+\end{figure}
+
+The game events are clearly represented in Figure \ref{fig:comeback}.
+Entering the game with the higher Elo, the Boston Bruins started with a marginally higher win probability than their opponent.
+Being the defining factor in winning and losing, goals have the most impact on the win probability.
+Each significant jump shows a goal, such as the Bruins' first goal of the night 5:27 into the first period.
+Their early work in the game showed their win probability approach 100\%, being up three goals with higher momentum.
+A Flyers' goal late in the first period made little impact as they still lagged in score, hits, and shots on goal.
+
+A notable event type affecting the probabilities throughout are power plays.
+Less than one minute after the Flyers' game-tying third goal, they received a two minute minor penalty for high-sticking.
+During this time, they played at a one player disadvantage.
+For these two minutes, Boston's win probability elevated.
+One minute following Philadelphia's successful penalty kill, the Bruins were indicted for hooking.
+For these two minutes, their win probability drops slightly.
+
+On April 7, 2009, the Carolina Hurricanes recorded the biggest shutout of the 21st century.
+Shown in Figure \ref{fig:shutout}, Carolina starts with a strong 72\% win probability as they enter as strong favorites with an Elo 193 points higher than New York.
+Beginning with Dennis Seidenberg's slap shot goal 2:54 into the first period, the Hurricanes would go on to score nine goals to the Islanders zero.
+With no response to the Carolina onslaught, the Y-axis for win probability had to be shifted to start at 0.7 and never dropped below the starting mark.
+Successive goals push the Hurricanes' win probability to an irrecoverable 99.9\% before the halfway point of the game.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\linewidth]{2008021187.png}
+    \caption{New York Islanders at Carolina Hurricanes, 7 April 2009}
+    \label{fig:shutout}
+\end{figure}
+
+On January 24, 2021, the Edmonton Oilers and Winnipeg Jets were tied at 3 goals each near the end of the third period.
+Figure \ref{fig:goahead} shows just the win probability over just the third period, which Edmonton entered leading 2-1.
+Two goals in less than two minutes by the Jets turned the tides in their favor, until the Oilers tied it again with four minutes to go.
+An overtime period was set to cap off an exciting night where both teams led by one goal for long stretches.
+With less than one second remaining in regulation, Leon Draisaitl of the Oilers scored to put Edmonton up 4-3 over Winnipeg.
+The graph shows this sudden lead change and effect of the last-second goal on the game's outcome.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1\linewidth]{2020020086.png}
+    \caption{Edmonton Oilers at Winnipeg Jets, 24 January 2021}
+    \label{fig:goahead}
+\end{figure}
+
+\subsection{Discussion}
+One weakness of this model is its apparent inability to adjust the win probability as the time remaining approaches zero.
+Looking back at Figure \ref{fig:comeback}, the win probability for the Bruins with no time remaining should be zero considering they are down one goal with no opportunity to score.
+However, their chance hovers near 20\% for the game duration after the Flyers' final goal.
+Similarly in Figure \ref{fig:goahead}, the Jets' win probability against a last-second go-ahead goal hovers near 20\%.
+
+We also find that man advantages are not properly accounted for.
+The model weights goals so heavily that significant scoring opportunities like power plays have a negligible impact on the win probability.
+Teams with strong power play units can convert a power play into a goal between 20\% and 30\% of the time \cite{powerplay}.
+However, since our feature set abstracts a team into an Elo score, the model is oblivious to a team's power play strengths or weaknesses.
+Including a team's power play percentage is beyond the scope of this project, and we predict that it may introduce correlation with Elo.
+One scenario that the features also ignore is a team pulling their goalie.
+Usually performed by a trailing team late in the game, this allows a team to put six skaters on the ice for additional offensive pressure.
+It comes at the cost of an empty net, and greatly increases the opposing team's scoring chances \cite{goaliepull}.
+Since the strength feature will only represent this as a 1 or -1, it is treated the same as a power play which typically has the opposite effect on win probability.
 
 \section{Related Work}
 Similar work in this field has been done for other sports, such as the aforementioned ESPN Win Probability graph.
 Some of the most useful work in this field has been done by groups studying Soccer like American Soccer Analysis using a 
-machine learning based approach \cite{richardett} or research by Robberechts et al \cite{bayesian} using Bayesian methods.
-Soccer is a much more translatable sport to our problem, as it is also a low scoring game with a similar gameplay flow to hockey.
+machine learning based approach \cite{richardett} or research by Robberechts et al \cite{bayesian} using Bayesian methods. Soccer
+is a much more translatable sport to our problem, as it is also a low scoring game with a similar gameplay flow to hockey.
 These works served as useful inspiration and insight into how we could develop an approach to predict the outcomes of hockey games.
 
 \section{Conclusion}
