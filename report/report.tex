@@ -13,76 +13,107 @@
 \maketitle
 
 \section{Abstract}
-The objective of this project is to provide a system that can provide live estimations
-about the outcomes of a National Hockey League (NHL) game. Using statistical and
-machine learning methods, we were able to create a model that can ???
+The objective of this project is to provide a system that can provide live estimates of the outcomes of a National Hockey League (NHL) game.
+Using statistical and machine learning methods, we were able to create a model that can ???
+
 \section{Introduction}
-Inspired by visualizations like the Win Probability graph provided by ESPN, we sought
-out to create a similar metric based on Hockey play by play data sourced from the NHL.
-We would like to use information about the state of the game, such as the current 
-score, 'momentum,' and other factors that can be derived from the data to determine 
-the odds of the home team winning at any arbitrary point in the game. Sports are 
-inherently unpredictable, however we can still make educated guesses at the chances 
-of specific outcomes based on information we have. Our approach is to stream in ‘Play-By-Play’ 
-data representing certain game events into our model, and then use statistical and machine 
-learning techniques like logistic regresion and machine learning to update our estimation on who
-is more likely to win as we gain more information about the state of the game.
+Inspired by visualizations such as the Win Probability graph provided by ESPN, we sought to create a similar metric based on hockey play-by-play data sourced from the NHL.
+We would like to use information about the state of the game, such as the current score, 'momentum,' and other factors that can be derived from the data to determine the odds of the home team winning at any arbitrary point in the game.
+Sports are inherently unpredictable; however, we can still make educated guesses at the chances of specific outcomes based on information we have.
+Our approach is to stream 'Play-by-Play' data representing certain game events into our model, and then use statistical and machine learning techniques such as logistic regression and machine learning to update our estimation of who is more likely to win as we gain more information about the state of the game.
 
 
 \section{Problem Definition}
 Given the Play-By-Play data for a specific NHL match up to a certain time point, 
-what is the probability of the Home or Away team winning? With the rise of the sports 
-betting industry, these types of endeavors have grown in popularity and interest on 
-both the bettor and bookkeepers sides, as bettors seek new edges and bookkeepers seek 
-to set more accurate lines. Estimations of NHL outcomes are not new, but from our research 
+what is the probability of the Home or Away team winning? With the rise of the sports
+betting industry, these types of endeavor have grown in popularity and interest on
+both the bettor and bookkeeper sides, as bettors seek new edges and bookkeepers seek
+to set more accurate lines. Estimates of NHL outcomes are not new, but from our research,
 there is no investigation into the dynamic estimation as the game is played. Measuring
 this probability can give us insight into the nature the moment an underdog team might
 turn the tables on a strong team, or show how a dominant team can maintain control of the game.
 
-
 \section{Models, Algorithms and Measures}
+\subsection{Why Logistic Regression?}
+While this project largely represents a binary classification problem in picking between one of two teams as the victor, we chose to use a logistic regression rather than a typical classification algorithm.
+This is because the goal is not to predict the winning team, but to give the odds for a team to win based on the current game state.
+Classification models like K-Nearest Neighbors would not have given us the flexibility to use confidence intervals as a form of win probability.
+We then picked the logistic regression since we assume that the factors affecting a win are not linear.
+The \texttt{LogisticRegression} class from \texttt{scikit-learn} provides a function called \texttt{predict\_proba()} which will return the model's confidence that a sample belongs to class 0 or class 1.
+In our case, class 0 represents a home win and class 1 represents an away win.
 
-In order to measure the comparative strength of two teams, it is not neccesary to reinvent the wheel. 
-Elo is a metric that lets us quantify this strength in a of teams, derived from the results of previous head to head match ups.
+\subsection{Determining Team Strength with Elo}
+In order to measure the comparative strength of two teams, it is not necessary to reinvent the wheel. 
+Elo is a metric that lets us quantify this strength in a of teams, derived from the results of previous head-to-head match ups.
 Upon completing a game, you receive Elo score corresponding to the difference between your score and your opponents. Win a game against
 an opponent with a much higher score, and you receive more points than winning one with a lower score, and vice versa for losing.
 Once you have these scores, you can measure the probability of a given team winning against another in a match up. 
-Using the following formula we can determien the probability of a given Elo matchup resulting in a win.
+Using the following formula we can determine the probability of a given Elo matchup resulting in a win.
 \[E_{A} = \frac{1}{1 + 10^{(R_{B} - R_{A})/400}}\] 
 
-
 \section{Implementation and Analysis}
-Our data is sourced from the official NHL API. This allows you to get historical play-by-play 
-data from games since the 2007 season using HTTP requests. Using a Game ID, you can download 
-all the games for a specific season. Thankfully, there exists an existing python implementation 
-that scrapes this data. 'hockey-scraper' by harryshomer on pypi allows you to input a season
-or a date range, and will download the season information then all associated plays with
-each game in that season. This is a somewhat large amount of data, taking multiple days to 
-download due to API rate limiting. Post-parquet compression, the data including play-by-play
-and shifts (documenting when a player comes on or off the ice) took up approximately half a gigabyte.
+\subsection{Data Retrieval, Cleaning, and Explanation}
+Our data is sourced from the official NHL API.
+This allows you to get historical play-by-play data from games since the 2007 season using HTTP requests in JSON format.
+The library \texttt{hockey-scraper} by harryshomer on PyPI allows you to input a season or a date range, and will download the season information then all associated plays with each game in that season.
+This is a large amount of data, representing nearly 700,000 plays between the 2007-2008 and 2023-2024 seasons.
+Due to API rate limiting, this download took multiple days.
+The data was placed into Pandas DataFrame objects and saved to parquet files.
+Post-parquet compression, the data for play-by-play and shifts (documenting when a player comes on or off the ice) took up approximately half a gigabyte.
 
-Analyzing the format of the data, we can view useful information about the game. A "play" is 
-recorded whenever a notable event occurs. These events can take forms like a shot on goal, 
-a successful goal, the result of a face off, penalties, or other associated game events. 
-For every play, all players that were involved are listed, as well as all other players on 
-the ice at the time. Spatial data is included, such as the X and Y coordinates on the rink 
-where the event happened, and of course information about the game itself such as the current 
-score, the teams, and the time remaining in the period.
+Analyzing the format of the data, we can view useful information about the game.
+A "play" is recorded whenever a notable event occurs.
+These events can take many forms such as a shot on goal, a successful goal, the result of a face-off, penalties, or other associated game events. 
+Every play lists all players that were involved, as well as all other players on the ice at the time.
+Spatial data is included, such as the X and Y coordinates on the rink where the event happened.
+Each play also lists information about the game state such as the current score, the teams, and the time remaining in the period.
 
+\subsection{Regression Features}
 In order to start adjusting the probability of a given team winning, you need a beginning assumption.
-You could just assume that each time has an equal chance of winning, but this naive assumption 
-neglects variables such as the strength of a team. We use the Elo system to determine this assumption. Starting in the 2007 season, we gave each team a 
-base level of 1500 Elo, and then started feeding in the results of their match ups. Teams do maintain some level
-of continuity between seasons, so instead of starting from scratch we simply shifted their Elo scores towards the baseline, 
-instead of completing reseting them. When it comes time to analyze the a specific game, we can now feed in this Elo score to get a baseline expectation of win probability.
+One could just assume that each team has an equal chance of winning, but this naive assumption neglects the individuality of teams and players.
+We chose to use the Elo system to determine this assumption.
+Starting in the 2007 season, we gave each team a base level of 1500 Elo, and then started feeding in the results of their match ups.
+Roster and staff changes for teams between seasons make it unreasonable to assume that their Elo will be the same between seasons.
+To maintain some continuity, we shift every team's back Elo by one-third of their difference to the baseline rather than completely resetting to 1500.
+One special case in this system was the Atlanta Thrashers, who relocated to Winnipeg in 2011 to become the Winnipeg Jets.
+Since the team also moved their players and staff to the new location, the "new" Winnipeg Jets inherited the Atlanta Thrashers' Elo.
+We can now feed in this Elo score to get a baseline win probability when analyzing specific games.
 
-Using our Elo score at the beginning of a game, we can, we can start to adjust it based on game events. First, we subdivide the
-game into discrete time slices of 30 seconds. We can then recrord the events of importance that occur during those time slices
-such as goals or penalties. Using these events we can update a 'strength' score for the team. This strength score can help predict how
-likely a team is to score in the near future. 
+We can start to adjust winning probability based on game events by first using each team's Elo score entering the game.
+Then, we divide the game into discrete time slices of 30 seconds.
+Each time slice represents the game state at the end of each interval, including each team's total score, shots on goal, hits, strength, and penalty minutes.
+Power plays are an important event for two to five minutes that can increase scoring chances and change the outcome of the game, and must be properly accounted for by the model.
+The original NHL dataset represents the number of players on the ice as strings like "5x5" or "4x5", where the first number shows the home team's strength and the second shows the away team's strength.
+Since these strings cannot be fed into the logistic regression model, the strengths are converted into the home team's player differential.
+Thus, "5x5" or "even strength" becomes 0, and "4x5" becomes -1, and vice versa.
 
-Testing our model is not as simple as one might think, as there is clearly no objective answer representing the true probability of a team winning given
-a given set of circumstances that we can compare our results to. However, we can measure how accurately our model can predict probabilties in aggregate by 'backtesting' it.
+In the NHL, games will advance to overtime if the score is tied at the end of three periods.
+For the regular season, teams play one, five-minute overtime of 3-on-3 before going to a shootout.
+For the playoffs, this is increased to unlimited twenty minute periods of 5-on-5 until one team scores.
+Due to this unpredictability and the puzzle for handling time remaining when the game length is unknown, we decided to remove overtime games from the dataset.
+Now that the time remaining feature ranges from 3600 (three, twenty minute periods, in seconds) to zero, we normalized the time remaining between 0 and 1 by dividing by 3600.
+
+\subsection{Model Training and Validation}
+The \texttt{LogisticRegression} model uses the \texttt{liblinear} solver for binary classification and \texttt{l2} penalty regularization.
+To select the best penalty, we trained multiple models using different penalties ranging from 0.00001 to 1.0.
+The accuracy of each model was compared using repeated K-fold cross validation with 10 splits and 3 repeats.
+The Matplotlib chart in Figure \ref{fig:kfold} shows each model's accuracy.
+We moved forward with the 1.0 penalty for having the best mean accuracy and smallest quartile range.
+
+It is important to discuss the meaning of this accuracy statistic and why it is not necessarily a good measure of our final product.
+For any given play, the model has approximately a 79\% chance of predicting the correct winner.
+The following testing section will discuss better strategies in detail.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.75\linewidth]{kfold.png}
+    \caption{Repeated Stratified K-Fold Cross Validation on Logistic Regression}
+    \label{fig:kfold}
+\end{figure}
+
+\subsection{Testing}
+There is clearly no objective answer representing the true probability of a team winning given a given set of circumstances that we can compare our results to.
+However, we can measure how accurately our model can predict probabilities in aggregate by 'backtesting' it.
 There are two different methodologies we came up with to backtest our model. 
 
 The first type we came up with is through using statistical regression methods. 
@@ -91,10 +122,9 @@ the home team won in this set of games, and compare it to our model's prediction
 Once we have the True win rate, and the expected win rate, we can perform statistical methods to such as sum of least squares or logistic loss. These functions measure 'Goodness of Fit,' 
 or generally represent how accurate our model is. 
 
-There exists other types of backtesting that we can apply that are called 'scoring rules.' These are evaluation metrics that can be used to evaluate the accuracy of probabilistic predictions.
-These types of scoring rules are highly applicable to our project, as we are directly making these types of forecasts and would like to measure their accuracy. By using these rules we can attempt to
-minimize our distance from true probability. The scoring function we used is called Ranked Probability Score. 
-
+There exist other types of backtesting that we can apply that are called 'scoring rules.' These are evaluation metrics that can be used to evaluate the accuracy of probabilistic predictions.
+These types of scoring rules are highly applicable to our project, as we are directly making these types of forecasts and would like to measure their accuracy. By using these rules we can attempt to minimize our distance from true probability.
+The scoring function we used is called Ranked Probability Score. 
 
 \begin{minipage}{0.45\textwidth}
   \vspace*{0pt}
@@ -110,15 +140,17 @@ minimize our distance from true probability. The scoring function we used is cal
   \includegraphics[width=2\textwidth]{elo_residuals.png}\\
 
 \end{minipage}
-  
 
+\section{Results and Discussion}
 
 \section{Related Work}
 Similar work in this field has been done for other sports, such as the aforementioned ESPN Win Probability graph.
-Some of the most useful work in this field has been done by groups studying Soccer like American Soccery Analysis using a 
-machine learning based approach \cite{richardett} or research by Robberechts et al \cite{bayesian} using bayesian methods. Soccer
-is a much more translatable sport to our problem, as it is also a low scoring game with a similar gameplay flow to hockey.
+Some of the most useful work in this field has been done by groups studying Soccer like American Soccer Analysis using a 
+machine learning based approach \cite{richardett} or research by Robberechts et al \cite{bayesian} using Bayesian methods.
+Soccer is a much more translatable sport to our problem, as it is also a low scoring game with a similar gameplay flow to hockey.
 These works served as useful inspiration and insight into how we could develop an approach to predict the outcomes of hockey games.
+
+\section{Conclusion}
 
 \nocite{*}
 \bibliographystyle{IEEEtran}
