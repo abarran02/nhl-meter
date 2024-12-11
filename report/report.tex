@@ -14,7 +14,8 @@
 
 \section{Abstract}
 The objective of this project is to provide a system that can provide live estimates of the outcomes of a National Hockey League (NHL) game.
-Using statistical and machine learning methods, we were able to create a model that can ???
+Using statistical and machine learning methods, we were able to create a model applying logistic regression. This model can sucessfully forecast
+the outcome of live NHL games with a high degree of accuracy.
 
 \section{Introduction}
 Inspired by visualizations such as the Win Probability graph provided by ESPN, we sought to create a similar metric based on hockey play-by-play data sourced from the NHL.
@@ -124,22 +125,17 @@ or generally represent how accurate our model is.
 
 There exist other types of backtesting that we can apply that are called 'scoring rules.' These are evaluation metrics that can be used to evaluate the accuracy of probabilistic predictions.
 These types of scoring rules are highly applicable to our project, as we are directly making these types of forecasts and would like to measure their accuracy. By using these rules we can attempt to minimize our distance from true probability.
-The scoring function we used is called Ranked Probability Score. 
+The scoring function we used is called Ranked Probability Score. Using the backtesting functions on the Elo model, we can see the following results:
 
-\begin{minipage}{0.45\textwidth}
-  \vspace*{0pt}
-  \centering
+
   \begin{verbatim}
     Sum of Least Squares: 12.2505
     Cross Entropy: 0.8863
     Ranked Probability Score: 0.1228
   \end{verbatim}
-  \end{minipage}
-  \hfill
-  \begin{minipage}{0.45\textwidth}
-  \includegraphics[width=2\textwidth]{elo_residuals.png}\\
 
-\end{minipage}
+We now can confirm that Elo is an acceptable model for predicting the outcomes on a game level, as the closer the RPS is to 0 the better.
+
 
 \section{Results and Discussion}
 The trained model can now approach the game state time series data to plot a team's win probability over time.
@@ -197,6 +193,18 @@ The graph shows this sudden lead change and effect of the last-second goal on th
     \label{fig:goahead}
 \end{figure}
 
+Analyzing our model with our backtesting functions, we the following numerical results
+
+
+\begin{verbatim}
+Sum of Least Squares: 0.0525
+Cross Entropy: 0.4951
+Ranked Probability Score: 0.0668
+\end{verbatim}
+
+These results show a strong ability to predict the outcome of a game given the game state, and that our model is accurate. For example, for RPS a score closer to 0 is better, so our model is twice as accurate
+at predicting the outcomes of games as the Elo model. This indicates our model is closely following the true probability of NHL games.
+
 \subsection{Discussion}
 One weakness of this model is its apparent inability to adjust the win probability as the time remaining approaches zero.
 Looking back at Figure \ref{fig:comeback}, the win probability for the Bruins with no time remaining should be zero considering they are down one goal with no opportunity to score.
@@ -221,6 +229,10 @@ is a much more translatable sport to our problem, as it is also a low scoring ga
 These works served as useful inspiration and insight into how we could develop an approach to predict the outcomes of hockey games.
 
 \section{Conclusion}
+In this project, we have developed a model that can predict the outcomes of NHL games based on the game state. Using our logistic regression model, we were able to display the estimated probability of 
+a team winning at any given point in the game. We have shown that our model is accurate at predicting the outcomes of games using statistical methods such as sum of least squares and ranked probability score,
+showing our model is twice as accurate as using just Elo. Improvements to this model in the future may be the ability to adapt the program to stream in data live, and extending the model to be able to interpret games that 
+go into overtime.
 
 \nocite{*}
 \bibliographystyle{IEEEtran}
