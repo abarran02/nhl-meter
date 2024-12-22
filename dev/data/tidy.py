@@ -104,13 +104,9 @@ def extract_players(pbp: pd.DataFrame) -> pd.DataFrame:
 
     return playerframe
 
-if __name__ == "__main__":
-    # data folder path
-    current_file_path = Path(__file__).resolve()
-    data_path = current_file_path.parent / '..' / '..' / 'data'
-
-    pbp = pd.read_parquet(data_path / 'pbp_combined.parquet')
-
+def tidy_pbp(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+    pbp = df.copy()
+    
     # type conversions for convenience
     pbp['Date'] = pd.to_datetime(pbp['Date'])
     pbp['Game_Id'] = pbp['Game_Id'].astype('int64')
@@ -122,6 +118,17 @@ if __name__ == "__main__":
     playerframe = extract_players(pbp)
     
     reduce_pbp(pbp)
+    
+    return (pbp, games, playerframe)
+
+if __name__ == "__main__":
+    # data folder path
+    current_file_path = Path(__file__).resolve()
+    data_path = current_file_path.parent / '..' / '..' / 'data'
+
+    pbp = pd.read_parquet(data_path / 'pbp_combined.parquet')
+
+    pbp, games, playerframe = tidy_pbp(pbp)
     
     games.to_parquet(data_path / 'games.parquet', index=False)
     playerframe.to_parquet(data_path / 'players.parquet', index=False)
