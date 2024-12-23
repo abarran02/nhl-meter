@@ -1,7 +1,12 @@
+from pathlib import Path
+
 import pandas as pd
 from elosports.elo import Elo
 
-def add_and_run_elo_by_season(df: pd.DataFrame) -> pd.DataFrame:
+
+def add_and_run_elo_by_season(games: pd.DataFrame) -> pd.DataFrame:
+    df = games.copy()
+    
     # add Elo columns and initialize all to zero
     df["Away_Starting_Elo"] = 0.0
     df["Home_Starting_Elo"] = 0.0
@@ -38,5 +43,10 @@ def add_and_run_elo_by_season(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 if __name__ == "__main__":
-    df = pd.read_parquet('./scripts/data/games.parquet')
-    df.to_parquet('./scripts/data/game_elo.parquet', index=False)
+    # data folder path
+    current_file_path = Path(__file__).resolve()
+    data_path = current_file_path.parent / '..' / '..' / 'data'
+    games = pd.read_parquet(data_path / 'games.parquet')
+    
+    df = add_and_run_elo_by_season(games)
+    df.to_parquet(data_path / 'game_elo.parquet', index=False)
