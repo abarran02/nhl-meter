@@ -5,7 +5,9 @@ import pandas as pd
 from numpy import ndarray
 
 # load teams and colors
-with open("teams.json") as f:
+import importlib.resources
+
+with importlib.resources.open_text('graphing', 'teams.json') as f:
     teams = json.load(f)
 
 def team_name_color(team_code: str) -> tuple[str, str]:
