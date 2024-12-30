@@ -1,5 +1,6 @@
 import importlib.resources
 import json
+from math import ceil
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -65,7 +66,7 @@ def graph_probabilities(time_remaining: pd.Series | ndarray,
 def convert_seconds_to_time_format(time_remaining: pd.Series | np.ndarray) -> list[tuple[str, int]]:
     tuples = []
     for t in time_remaining:
-        period = int(3 - (t // 1200))
+        period = ceil(t / 1200)
         minutes = int(t // 60)
         seconds = int(t % 60)
 
@@ -74,14 +75,14 @@ def convert_seconds_to_time_format(time_remaining: pd.Series | np.ndarray) -> li
 
     return tuples
 
-def graph_probabilities_plotly(time_remaining: pd.Series | np.ndarray,
+def graph_probabilities_plotly(time_elapsed: pd.Series | np.ndarray,
                                 probabilities: pd.Series | np.ndarray,
                                 home: tuple[str, str],
                                 away: tuple[str, str]) -> go.Figure:
     """Generate and display win probability over time from home team perspective using Plotly.
 
     Args:
-        time_remaining (pd.Series | ndarray): Time remaining in seconds
+        time_elapsed (pd.Series | ndarray): Time elapsed in seconds
         probabilities (pd.Series | ndarray): Win probability for home team
         home (tuple[str, str]): Home team name and hex color for shading
         away (tuple[str, str]): Away team name and hex color for shading
@@ -90,7 +91,7 @@ def graph_probabilities_plotly(time_remaining: pd.Series | np.ndarray,
 
     # Fill for home team
     fig.add_trace(go.Scatter(
-        x=time_remaining,
+        x=time_elapsed,
         y=probabilities,
         mode='lines',
         line=dict(color=home[1]),
@@ -101,7 +102,7 @@ def graph_probabilities_plotly(time_remaining: pd.Series | np.ndarray,
 
     # Fill for away team
     fig.add_trace(go.Scatter(
-        x=time_remaining,
+        x=time_elapsed,
         y=(np.ones(probabilities.shape) - probabilities),
         mode='lines',
         line=dict(color=away[1]),
@@ -111,11 +112,11 @@ def graph_probabilities_plotly(time_remaining: pd.Series | np.ndarray,
     ))
     
     # ugly but I got it to work and do not want to change it
-    hover_text = [f"Time: {x[0]}<br>Period: {x[1]}<br>Value: {y:.4f}<extra></extra>" for x, y in zip(convert_seconds_to_time_format(time_remaining), probabilities)]
+    hover_text = [f"Time: {x[0]}<br>Period: {x[1]}<br>Value: {y:.4f}<extra></extra>" for x, y in zip(convert_seconds_to_time_format(time_elapsed), probabilities)]
     
     # Line for probabilities
     fig.add_trace(go.Scatter(
-        x=time_remaining,
+        x=time_elapsed,
         y=probabilities,
         mode='lines',
         line=dict(color='black', width=1),
@@ -128,8 +129,7 @@ def graph_probabilities_plotly(time_remaining: pd.Series | np.ndarray,
     fig.update_layout(
         title=f"{home[0]} Win Probability Over Time",
         xaxis=dict(
-            title="Time Remaining (s)",
-            autorange="reversed"  # Invert x-axis
+            title="Time Elapsed (s)",
         ),
         yaxis=dict(
             title="Win Probability",

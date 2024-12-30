@@ -94,20 +94,26 @@ def update_figure(home, away, game_season):
     game, season = game_season.split('.')
     selected_game = slices[(slices["game"] == int(game)) & (slices["season"] == int(season))]
 
-    if len(selected_game) == 0:
-        # game went to overtime, not in slices
-        # concatenate graphs?
-        return go.Figure()
+    # if len(selected_game) == 0:
+    #     # game went to overtime
+    #     # concatenate graphs?
+    #     return go.Figure()
 
     X = selected_game.drop(columns=["winner", "game", "season"])
 
     probabilities = model.predict(X)
 
-    home = gutils.team_name_color(home)
-    away = gutils.team_name_color(away)
+    # convert from normalized 1 to 0
+    time_elapsed = 3600 - (selected_game["time_remaining"] * 3600)
 
-    fig = gutils.graph_probabilities_plotly(selected_game["time_remaining"] * 3600, probabilities.flatten(), home, away)
+    fig = gutils.graph_probabilities_plotly(
+        time_elapsed,
+        probabilities.flatten(),
+        gutils.team_name_color(home),
+        gutils.team_name_color(away)
+    )
     fig.update_layout(height=600)
+
     return fig
 
 if __name__ == "__main__":
