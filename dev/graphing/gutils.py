@@ -26,12 +26,11 @@ def team_name_color(team_code: str) -> tuple[str, str]:
 
     for t in teams:
         if t["team_code"] == team_code:
-            idx = next(i for i, color in enumerate(t["colors"]["hex"]) if color != '010101')
-            color = t["colors"]["hex"][idx]
+            color = t["colors"]["hex"][0]
             return (t["name"], f'#{color}')
 
     # no team color found
-    raise AttributeError
+    raise AttributeError(f"Invalid team code: {team_code}")
 
 def graph_probabilities(time_remaining: pd.Series | ndarray,
                         probabilities: pd.Series | ndarray,
@@ -63,6 +62,18 @@ def graph_probabilities(time_remaining: pd.Series | ndarray,
     plt.grid()
     plt.show()
 
+def convert_seconds_to_time_format(time_remaining: pd.Series | np.ndarray) -> list[tuple[str, int]]:
+    tuples = []
+    for t in time_remaining:
+        period = int(3 - (t // 1200))
+        minutes = int(t // 60)
+        seconds = int(t % 60)
+
+        time_str = f"{minutes}:{seconds:02d}"
+        tuples.append((time_str, period))
+
+    return tuples
+
 def graph_probabilities_plotly(time_remaining: pd.Series | np.ndarray,
                                 probabilities: pd.Series | np.ndarray,
                                 home: tuple[str, str],
@@ -77,28 +88,45 @@ def graph_probabilities_plotly(time_remaining: pd.Series | np.ndarray,
     """
     fig = go.Figure()
 
+    # Fill for home team
+    fig.add_trace(go.Scatter(
+        x=time_remaining,
+        y=probabilities,
+        mode='lines',
+        line=dict(color=home[1]),
+        name=home[0],
+        hoverinfo="none",
+        stackgroup="one"
+    ))
+
+    # Fill for away team
+    fig.add_trace(go.Scatter(
+        x=time_remaining,
+        y=(np.ones(probabilities.shape) - probabilities),
+        mode='lines',
+        line=dict(color=away[1]),
+        name=away[0],
+        hoverinfo="none",
+        stackgroup="one"
+    ))
+    
+    # ugly but I got it to work and do not want to change it
+    hover_text = [f"Time: {x[0]}<br>Period: {x[1]}<br>Value: {y:.4f}<extra></extra>" for x, y in zip(convert_seconds_to_time_format(time_remaining), probabilities)]
+    
     # Line for probabilities
     fig.add_trace(go.Scatter(
         x=time_remaining,
         y=probabilities,
         mode='lines',
         line=dict(color='black', width=1),
-        name='Win Probability'
+        name='Win Probability',
+        hovertemplate=hover_text
     ))
 
-    # Fill for home team
-    fig.add_trace(go.Scatter(
-        x=time_remaining,
-        y=probabilities,
-        fill='tozeroy',
-        fillcolor=home[1],
-        mode='none',
-        name=home[0],
-        opacity=0.4
-    ))
+    fig.add_hline(y=0.5, line=dict(color="Red", width=2, dash="dash"))
 
     fig.update_layout(
-        title="Home Team Win Probability Over Time",
+        title=f"{home[0]} Win Probability Over Time",
         xaxis=dict(
             title="Time Remaining (s)",
             autorange="reversed"  # Invert x-axis
