@@ -3,7 +3,6 @@
     "name": "Anaheim Ducks",
     "colors": {
       "hex": [
-        "010101",
         "a2aaad",
         "fc4c02",
         "85714d"
@@ -15,7 +14,6 @@
     "name": "Arizona Coyotes",
     "colors": {
       "hex": [
-        "010101",
         "862633",
         "ddcba4"
       ]
@@ -23,10 +21,20 @@
     "team_code": "ARI"
   },
   {
+    "name": "Atlanta Thrashers",
+    "colors": {
+      "hex": [
+        "041e42",
+        "5c88da",
+        "862633"
+      ]
+    },
+    "team_code": "ATL"
+  },
+  {
     "name": "Boston Bruins",
     "colors": {
       "hex": [
-        "010101",
         "ffb81c"
       ]
     },
@@ -48,7 +56,6 @@
     "name": "Calgary Flames",
     "colors": {
       "hex": [
-        "010101",
         "f1be48",
         "c8102e"
       ]
@@ -59,7 +66,6 @@
     "name": "Carolina Hurricanes",
     "colors": {
       "hex": [
-        "010101",
         "a2aaad",
         "c8102e"
       ]
@@ -70,7 +76,6 @@
     "name": "Chicago Blackhawks",
     "colors": {
       "hex": [
-        "010101",
         "ff671f",
         "ffd100",
         "001871",
@@ -85,7 +90,6 @@
     "name": "Colorado Avalanche",
     "colors": {
       "hex": [
-        "010101",
         "236192",
         "a4a9ad",
         "6f263d"
@@ -108,7 +112,6 @@
     "name": "Dallas Stars",
     "colors": {
       "hex": [
-        "010101",
         "006341",
         "8a8d8f"
       ]
@@ -149,7 +152,6 @@
     "name": "Los Angeles Kings",
     "colors": {
       "hex": [
-        "010101",
         "a2aaad"
       ]
     },
@@ -191,7 +193,6 @@
     "name": "New Jersey Devils",
     "colors": {
       "hex": [
-        "010101",
         "c8102e"
       ]
     },
@@ -221,7 +222,6 @@
     "name": "Ottawa Senators",
     "colors": {
       "hex": [
-        "010101",
         "c8102e",
         "c69214"
       ]
@@ -232,7 +232,6 @@
     "name": "Philadelphia Flyers",
     "colors": {
       "hex": [
-        "010101",
         "fa4616"
       ]
     },
@@ -242,17 +241,25 @@
     "name": "Pittsburgh Penguins",
     "colors": {
       "hex": [
-        "010101",
         "ffb81c"
       ]
     },
     "team_code": "PIT"
   },
   {
+    "name": "Seattle Kraken",
+    "colors": {
+      "hex": [
+        "001628",
+        "99d9d9"
+      ]
+    },
+    "team_code": "SEA"
+  },
+  {
     "name": "San Jose Sharks",
     "colors": {
       "hex": [
-        "010101",
         "e57200",
         "006272"
       ]
@@ -303,7 +310,6 @@
     "name": "Vegas Golden Knights",
     "colors": {
       "hex": [
-        "010101",
         "b4975a",
         "333f42"
       ]

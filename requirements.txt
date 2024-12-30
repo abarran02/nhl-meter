@@ -20,3 +20,4 @@ scikit-learn
 ipykernel
 keras
 tensorflow-cpu
+dash
