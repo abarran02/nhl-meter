@@ -21,6 +21,17 @@
     "team_code": "ARI"
   },
   {
+    "name": "Atlanta Thrashers",
+    "colors": {
+      "hex": [
+        "041e42",
+        "5c88da",
+        "862633"
+      ]
+    },
+    "team_code": "ATL"
+  },
+  {
     "name": "Boston Bruins",
     "colors": {
       "hex": [
