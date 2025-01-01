@@ -9,7 +9,7 @@ from dev.graphing import gutils
 
 games = pd.read_parquet("data/games.parquet")
 slices = pd.read_parquet("data/time_slices.parquet")
-model = load_model("dev/models/meter_lstm16d2.keras")
+model = load_model("dev/models/meter_lstm16d2ot.keras")
 
 teams = games["Home_Team"].unique()
 teams.sort()
@@ -105,12 +105,20 @@ def update_figure(home, away, game_season):
 
     # convert from normalized 1 to 0
     time_elapsed = 3600 - (selected_game["time_remaining"] * 3600)
+    
+    # find team full names and colors
+    idx = 0
+    home_name_color = gutils.team_name_color(home, idx)
+    away_name_color = gutils.team_name_color(away, idx)
+    while (away_name_color)[1] == home_name_color[1]:  # ensure colors are different
+        idx += 1
+        away_name_color = gutils.team_name_color(away, idx)
 
     fig = gutils.graph_probabilities_plotly(
         time_elapsed,
         probabilities.flatten(),
-        gutils.team_name_color(home),
-        gutils.team_name_color(away)
+        home_name_color,
+        away_name_color
     )
     fig.update_layout(height=600)
 
