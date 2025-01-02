@@ -12,7 +12,7 @@ from numpy import ndarray
 with importlib.resources.open_text('dev.graphing', 'teams.json') as f:
     teams = json.load(f)
 
-def team_name_color(team_code: str) -> tuple[str, str]:
+def team_name_color(team_code: str, color_index: int = 0) -> tuple[str, str]:
     """Finds the hex color for a given NHL team by team code
 
     Args:
@@ -27,7 +27,11 @@ def team_name_color(team_code: str) -> tuple[str, str]:
 
     for t in teams:
         if t["team_code"] == team_code:
-            color = t["colors"]["hex"][0]
+            try:
+                color = t["colors"]["hex"][color_index]
+            except IndexError:
+                raise IndexError(f"Invalid color index: {color_index}")
+
             return (t["name"], f'#{color}')
 
     # no team color found
@@ -110,10 +114,10 @@ def graph_probabilities_plotly(time_elapsed: pd.Series | np.ndarray,
         hoverinfo="none",
         stackgroup="one"
     ))
-    
+
     # ugly but I got it to work and do not want to change it
     hover_text = [f"Time: {x[0]}<br>Period: {x[1]}<br>Value: {y:.4f}<extra></extra>" for x, y in zip(convert_seconds_to_time_format(time_elapsed), probabilities)]
-    
+
     # Line for probabilities
     fig.add_trace(go.Scatter(
         x=time_elapsed,
