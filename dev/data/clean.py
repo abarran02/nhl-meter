@@ -1,3 +1,6 @@
+# for the current ML-focused state of this project, fixing IDs is not necessary as the model ignores individual players
+# my implementation is also extremely slow, which is why I had to throw 12 cores at it
+
 import os
 import pandas as pd
 from concurrent.futures import ProcessPoolExecutor
@@ -23,8 +26,8 @@ def fix_missing_ids(pbp: pd.DataFrame, shifts: pd.DataFrame) -> pd.DataFrame:
         id_col = p + "_id"
         rows = pbp.loc[(pbp[id_col].isnull()) & (pbp[p].notnull())]  # players with name but null id
 
-        for i, r in rows.iterrows():
-            pbp = fix_player_id(pbp, shifts, r["Game_Id"], r[p], p, id_col)
+        for row in rows.itertuples(index=False):
+            pbp = fix_player_id(pbp, shifts, row.Game_Id, getattr(row, p), p, id_col)
 
     # fix IDs for players involved in event
     for p in ["p1", "p2", "p3"]:
@@ -32,11 +35,11 @@ def fix_missing_ids(pbp: pd.DataFrame, shifts: pd.DataFrame) -> pd.DataFrame:
         name_col = p + "_name"
         rows = pbp.loc[pbp[id_col].isnull() & pbp[name_col].notnull()]
 
-        for i, r in rows.iterrows():
-            if (name := r[p + "_name"]) == "Team":  # exclude team penalties like too many men
-                continue
+    for row in rows.itertuples(index=False):  # Use index=True to access the row index if needed
+        if (name := getattr(row, p + "_name")) == "Team":  # Exclude team penalties
+            continue
 
-            pbp = fix_player_id(pbp, shifts, r["Game_Id"], name, name_col, id_col)
+        pbp = fix_player_id(pbp, shifts, row.Game_Id, name, name_col, id_col)
 
     return pbp
 
