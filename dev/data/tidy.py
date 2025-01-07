@@ -38,7 +38,7 @@ def add_season_column(pbp: pd.DataFrame):
     season_list = []
     season = 2007
     comparison_date = datetime.strptime('2008-08-31', '%Y-%m-%d')
-    for row in pbp.itertuples(index=True):
+    for row in pbp.itertuples(index=False):
         if row.Date > comparison_date:
             season += 1
             comparison_date += timedelta(days=365)
@@ -79,9 +79,9 @@ def extract_games(pbp: pd.DataFrame) -> pd.DataFrame:
 
     # determine whether each game is regular season or playoff
     playoff = []
-    for idx, game in games.iterrows():
-        season =  game['Season']
-        playoff.append(game['Date'] >= playoff_dates[season])
+    for game in games.itertuples(index=False):
+        season =  game.Season
+        playoff.append(game.Date >= playoff_dates[season])
     games['Playoff'] = playoff
 
     return games
