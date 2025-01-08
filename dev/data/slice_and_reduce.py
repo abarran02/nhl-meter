@@ -1,6 +1,7 @@
 import copy
 import re
 from pathlib import Path
+from typing import Callable, NamedTuple
 
 import pandas as pd
 from tqdm import tqdm
@@ -80,9 +81,45 @@ def slice_regulation(games: pd.DataFrame, pbp: pd.DataFrame, slice_length: int =
 
     return pd.DataFrame(slices)
 
-def reduce_regular_overtime(games: pd.DataFrame, pbp: pd.DataFrame) -> pd.DataFrame:
+def reduce_plays(game: NamedTuple, pbp: pd.DataFrame, time_key: str, time_function: Callable[[int, int], int]) -> list[dict]:
     valid_events = ["FAC", "BLOCK", "SHOT", "GOAL", "MISS", "HIT", "GIVE", "TAKE"]
+    
+    events = []
+    for play in pbp.itertuples(index=False):
+        # first event will always be a faceoff
+        if play.Event in valid_events:
+            event = {
+                "game": game.Game_Id,
+                "season": game.Season,
+                "away_elo": game.Away_Starting_Elo,
+                "home_elo": game.Home_Starting_Elo,
+                time_key: time_function(play.Period, play.Seconds_Elapsed),
+                "event": play.Event,
+                "team": "home" if play.Ev_Team == play.Home_Team else "away",
+                "event_zone": play.Ev_Zone,
+                "home_zone": play.Home_Zone,
+                "strength": play.Strength,
+                "winner": "home" if game.Home_Score > game.Away_Score else "away"
+            }
 
+            events.append(event)
+
+    return events
+
+def reduce_regulation(games: pd.DataFrame, pbp: pd.DataFrame) -> pd.DataFrame:
+    events = []
+    for game in tqdm(games.itertuples(index=False), total=len(games)):
+        mask = ((pbp["Game_Id"] == game.Game_Id)
+                & (pbp["Season"] == game.Season)
+                & (pbp["Period"] < 4))
+        reduced = pbp[mask]
+
+        time_remaining = lambda x, y: 3600 - y + ((x - 1) * 1200)
+        events.extend(reduce_plays(game, reduced, "time_remaining", time_remaining))
+
+    return pd.DataFrame(events)
+
+def reduce_regular_overtime(games: pd.DataFrame, pbp: pd.DataFrame) -> pd.DataFrame:
     events = []
     for game in tqdm(games.itertuples(index=False), total=len(games)):
         mask = ((pbp["Game_Id"] == game.Game_Id)
@@ -90,30 +127,12 @@ def reduce_regular_overtime(games: pd.DataFrame, pbp: pd.DataFrame) -> pd.DataFr
                 & (pbp["Period"] == 4))
         reduced = pbp[mask]
 
-        for play in reduced.itertuples(index=False):
-            # first event will always be a faceoff
-            if play.Event in valid_events:
-                event = {
-                    "game": game.Game_Id,
-                    "season": game.Season,
-                    "away_elo": game.Away_Starting_Elo,
-                    "home_elo": game.Home_Starting_Elo,
-                    "time_remaining": 300 - play.Seconds_Elapsed,  # 5 minutes in OT
-                    "event": play.Event,
-                    "team": "home" if play.Ev_Team == play.Home_Team else "away",
-                    "event_zone": play.Ev_Zone,
-                    "home_zone": play.Home_Zone,
-                    "strength": play.Strength,
-                    "winner": "home" if game.Home_Score > game.Away_Score else "away"
-                }
-
-                events.append(event)
+        time_remaining = lambda x, y: 300 - y
+        events.extend(reduce_plays(game, reduced, "time_remaining", time_remaining))
 
     return pd.DataFrame(events)
 
 def reduce_playoff_overtime(games: pd.DataFrame, pbp: pd.DataFrame) -> pd.DataFrame:
-    valid_events = ["FAC", "BLOCK", "SHOT", "GOAL", "MISS", "HIT", "GIVE", "TAKE"]
-
     events = []
     for game in tqdm(games.itertuples(index=False), total=len(games)):
         mask = ((pbp["Game_Id"] == game.Game_Id)
@@ -121,24 +140,8 @@ def reduce_playoff_overtime(games: pd.DataFrame, pbp: pd.DataFrame) -> pd.DataFr
                 & (pbp["Period"] >= 4))
         reduced = pbp[mask]
 
-        for play in reduced.itertuples(index=False):
-            # first event will always be a faceoff
-            if play.Event in valid_events:
-                event = {
-                    "game": game.Game_Id,
-                    "season": game.Season,
-                    "away_elo": game.Away_Starting_Elo,
-                    "home_elo": game.Home_Starting_Elo,
-                    "seconds_elapsed": ((play.Period - 4) * 1200) + play.Seconds_Elapsed,
-                    "event": play.Event,
-                    "team": "home" if play.Ev_Team == play.Home_Team else "away",
-                    "event_zone": play.Ev_Zone,
-                    "home_zone": play.Home_Zone,
-                    "strength": play.Strength,
-                    "winner": "home" if game.Home_Score > game.Away_Score else "away"
-                }
-
-                events.append(event)
+        seconds_elapsed =  lambda x, y: ((x - 4) * 1200) + y
+        events.extend(reduce_plays(game, reduced, "seconds_elapsed", seconds_elapsed))
 
     return pd.DataFrame(events)
 
@@ -151,6 +154,10 @@ if __name__ == "__main__":
 
     slices = slice_regulation(games, pbp)
     slices.to_parquet(data_path / "time_slices.parquet")
+
+    regulation = games[games["Period"] < 4]
+    events = reduce_regulation(regulation, pbp)
+    events.to_parquet(data_path / "regulation_pbp.parquet")
 
     # ignore shootout
     regular_ot = games[(games["Period"] == 4) & (games["Playoff"] == False)]
