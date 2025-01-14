@@ -1,5 +1,4 @@
 import pandas as pd
-from tqdm import tqdm
 import numpy as np
 
 
@@ -11,8 +10,8 @@ def plays_preceding_goals(pbp: pd.DataFrame, window_size: int, include_goal: boo
         pbp (pd.DataFrame): NHL play-by-play data.
         window_size (int): Number of plays preceding goal to include.
         include_goal (bool, optional): Whether to include the GOAL play. Defaults to True.
-        convert_winner (bool, optional): For regular season games, converts the `winner` 
-            column to the team of each goal scored. Also converts game IDs to random, 
+        convert_winner (bool, optional): For regular season games, converts the `winner`
+            column to the team of each goal scored. Also converts game IDs to random,
             negative values so that each goal is treated as a separate game. Defaults to False.
 
     Returns:
@@ -46,7 +45,7 @@ def plays_preceding_goals(pbp: pd.DataFrame, window_size: int, include_goal: boo
         # convert game ID to arbitrary value
         winners = np.array(pbp["winner"].values)
         ids = np.array(pbp["game"].values)
-    
+
         # use negative index as "game ID" since real IDs are positive
         for idx, (rng, value) in enumerate(zip(windows, targets)):
             winners[list(rng)] = value
@@ -72,7 +71,7 @@ def sliding_window_game_pbp(pbp: pd.DataFrame, window_size: int) -> tuple[np.nda
     windows = []
     targets = []
 
-    for group_name, group in tqdm(grouped, total=len(grouped)):
+    for group_name, group in grouped:
         temp_window = []
         target = group["winner"].iloc[0]  # same for all in group
 
@@ -86,3 +85,54 @@ def sliding_window_game_pbp(pbp: pd.DataFrame, window_size: int) -> tuple[np.nda
                 temp_window.pop(0)
 
     return np.array(windows), np.array(targets)
+
+def predict_regulation(game: int, season: int, slices: pd.DataFrame, model) -> tuple[pd.Series, np.ndarray]:
+    """Predict regulation win probabilities for given NHL game.
+
+    Args:
+        game (int): NHL Game ID
+        season (int): NHL season
+        ot_pbp (pd.DataFrame): regulation time slice data
+        model (Model): keras Model
+
+    Returns:
+        tuple[pd.Series, np.ndarray]: Time series and win probability
+    """
+    selected_game = slices[(slices["game"] == game) & (slices["season"] == season)]
+
+    X = selected_game.drop(columns=["winner", "game", "season"])
+
+    probabilities = model.predict(X)
+
+    # convert from normalized 1 to 0
+    time_elapsed = 3600 - (selected_game["time_remaining"] * 3600)
+
+    return (time_elapsed, probabilities.flatten())
+
+def predict_overtime(game: int, season: int, ot_pbp: pd.DataFrame, model, one_hot_columns: list[str]) -> tuple[pd.Series, np.ndarray]:
+    """Predict overtime win probabilities for given NHL game.
+
+    Args:
+        game (int): NHL Game ID
+        season (int): NHL season
+        ot_pbp (pd.DataFrame): overtime play-by-play data
+        model (Model): keras Model
+        one_hot_columns (list[str]): one-hot encoding columns from training
+
+    Returns:
+        tuple[pd.Series, np.ndarray]: Time series and win probability
+    """
+
+    mask = (ot_pbp["game"] == game) & (ot_pbp["season"] == season)
+    selected_game = ot_pbp[mask]
+
+    # one-hot encode play-by-play and match columns to training data
+    X = selected_game.drop(["seconds_elapsed"], axis=1)
+    X_encoded = pd.get_dummies(X, columns=["event", "team", "event_zone", "home_zone", "strength"])
+    X_encoded = X_encoded.reindex(columns=one_hot_columns, fill_value=False)
+
+    windows, targets = sliding_window_game_pbp(X_encoded, 3)
+
+    probabilities = model.predict(windows)
+
+    return (3600 + selected_game["seconds_elapsed"], probabilities.flatten())
