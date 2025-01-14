@@ -1,3 +1,5 @@
+import json
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -5,16 +7,23 @@ from dash import Dash, dcc, html
 from dash.dependencies import Input, Output, State
 from keras.models import load_model
 
+from dev import sliding_window
 from dev.graphing import gutils
+
+dummy_cols = ["event", "team", "event_zone", "home_zone", "strength"]
 
 games = pd.read_parquet("data/games.parquet")
 slices = pd.read_parquet("data/time_slices.parquet")
+regulation_pbp = pd.read_parquet("data/regulation_pbp.parquet")
 regular_ot_pbp = pd.read_parquet("data/regular_ot_pbp.parquet")
 playoff_ot_pbp = pd.read_parquet("data/playoff_ot_pbp.parquet")
+ot_pbp = pd.concat([regular_ot_pbp, playoff_ot_pbp])
+
+with open("dev/models/one_hot_columns.json", 'r') as f:
+    one_hot_columns = json.load(f)
 
 model_regulation = load_model("dev/models/meter_lstm16d2.keras")
-model_regular_ot = load_model("dev/models/meter_reg_ot_lstm16.keras")
-model_playoff_ot = load_model("dev/models/meter_ply_ot_lstm16.keras")
+model_overtime = load_model("dev/models/meter_ot_lstm16d1.keras")
 
 teams = games["Home_Team"].unique()
 teams.sort()
@@ -86,6 +95,8 @@ def update_game_dropdown(home, away):
         "value": f'{g["Game_Id"]}.{g["Season"]}'
     } for idx, g in games_reduced.iterrows()]
 
+
+
 def predict_regulation(game: int, season: int) -> tuple[pd.Series, np.ndarray]:
     selected_game = slices[(slices["game"] == game) & (slices["season"] == season)]
 
@@ -101,21 +112,17 @@ def predict_regulation(game: int, season: int) -> tuple[pd.Series, np.ndarray]:
 def predict_overtime(game: int,
                      season: int,
                      playoff: bool) -> tuple[pd.Series, np.ndarray]:
-    if playoff:
-        mask = (playoff_ot_pbp["game"] == game) & (playoff_ot_pbp["season"] == season)
-        selected_game = playoff_ot_pbp[mask]
-        model = model_playoff_ot
-        time_elapsed = selected_game["seconds_elapsed"]
-    else:
-        mask = (regular_ot_pbp["game"] == game) & (regular_ot_pbp["season"] == season)
-        selected_game = regular_ot_pbp[mask]
-        model = model_regular_ot
-        time_elapsed = 300 - selected_game["time_remaining"]
 
-    X = selected_game.drop(["winner", "season", "game"], axis=1)
-    X_encoded = pd.get_dummies(X, columns=["event", "team", "event_zone", "home_zone", "strength"])
+    mask = (ot_pbp["game"] == game) & (ot_pbp["season"] == season)
+    selected_game = ot_pbp[mask]
+    X = selected_game.drop(["seconds_elapsed"], axis=1)
+    X_encoded = pd.get_dummies(X, columns=dummy_cols)
+    X_encoded = X_encoded.reindex(columns=one_hot_columns, fill_value=False)
+    time_elapsed = selected_game["seconds_elapsed"]
 
-    probabilities = model.predict(X_encoded)
+    windows, targets = sliding_window.sliding_window_game_pbp(X_encoded, 3)
+
+    probabilities = model_overtime.predict(windows)
 
     return (3600 + time_elapsed, probabilities.flatten())
 

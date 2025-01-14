@@ -127,8 +127,8 @@ def reduce_regular_overtime(games: pd.DataFrame, pbp: pd.DataFrame) -> pd.DataFr
                 & (pbp["Period"] == 4))
         reduced = pbp[mask]
 
-        time_remaining = lambda x, y: 300 - y
-        events.extend(reduce_plays(game, reduced, "time_remaining", time_remaining))
+        seconds_elapsed = lambda x, y: y
+        events.extend(reduce_plays(game, reduced, "seconds_elapsed", seconds_elapsed))
 
     return pd.DataFrame(events)
 
