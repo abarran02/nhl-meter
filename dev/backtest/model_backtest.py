@@ -1,5 +1,5 @@
 import pandas as pd
-from main import NHL_METER
+from dev.analysis.main import NHL_METER
 from elosports.elo import Elo
 import matplotlib.pyplot as plt
 
