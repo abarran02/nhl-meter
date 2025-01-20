@@ -3,7 +3,7 @@ from layout import app_layout
 from callbacks import register_callbacks
 
 external_stylesheets = [
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css'
+    "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
 ]
 
 app = Dash(

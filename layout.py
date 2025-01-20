@@ -23,6 +23,7 @@ app_layout = html.Div([
     ], style=footer_style),
 
     html.Div([
+        dcc.Location(id="page-load", refresh=False),
         html.Div(style={"flex": "10%"}),
         html.Div([
             html.H3("Teams and Games"),
@@ -48,8 +49,12 @@ app_layout = html.Div([
             ], className="dropdown-container", style={"margin-top": "20px"})
         ], style={"flex": "15%"}),
         html.Div([
-            dcc.Graph(id="probability-graph")
-        ], style={"flex": "auto"}),
+            dcc.Loading(
+                id="loading",
+                children=[dcc.Graph(id="probability-graph")],
+                type="circle"
+            )
+        ], style={"flex": "auto"}, id="graph"),
         html.Div(style={"flex": "10%"}),
     ], style={"display": "flex", "flex-direction": "row"})
-])
+], style={"height": "100vh"})
