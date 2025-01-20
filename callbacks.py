@@ -1,4 +1,7 @@
 import json
+import os
+
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"  # silence TensorFlow warnings
 
 import numpy as np
 import pandas as pd
@@ -79,6 +82,8 @@ def register_callbacks(app):
             away_name_color = gutils.team_name_color(away, idx)
 
         time_elapsed, probabilities = meter.predict_regulation(game, season, slices, model_regulation)
+        mask = (slices["game"] == game) & (slices["season"] == season)
+        scores = (slices[mask]["home_score"], slices[mask]["away_score"])
 
         # handle overtime games
         mask = (games["Game_Id"] == game) & (games["Season"] == season)
@@ -90,12 +95,20 @@ def register_callbacks(app):
             time_elapsed = pd.concat([time_elapsed[:-1], time_elapsed_ot])
             probabilities = np.concatenate((probabilities[:-1], probabilities_ot))
 
+            # extend scores and convert to numpy arrays
+            length = len(probabilities_ot) - 2  # one data point each removed from end of regulation and overtime
+            scores = (
+                np.concatenate([scores[0].values, np.full(length, scores[0].iloc[-1]), [game_data["Home_Score"]]]),
+                np.concatenate([scores[1].values, np.full(length, scores[1].iloc[-1]), [game_data["Away_Score"]]])
+            )
+
         fig = gutils.graph_probabilities_plotly(
             time_elapsed,
             probabilities,
+            scores,
             home_name_color,
-            away_name_color
+            away_name_color,
         )
-        fig.update_layout(height=1000)
+        fig.update_layout(height=800)
 
         return fig
