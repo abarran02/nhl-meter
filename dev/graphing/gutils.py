@@ -37,36 +37,6 @@ def team_name_color(team_code: str, color_index: int = 0) -> tuple[str, str]:
     # no team color found
     raise AttributeError(f"Invalid team code: {team_code}")
 
-def graph_probabilities(time_remaining: pd.Series | ndarray,
-                        probabilities: pd.Series | ndarray,
-                        home: tuple[str, str],
-                        away: tuple[str, str]) -> None:
-    """Generate and display win probability over time from home team perspective.
-
-    Args:
-        time_remaining (pd.Series | ndarray): Time remaining in seconds
-        probabilities (pd.Series | ndarray): Win probability for home team
-        home (tuple[str, str]): Home team name and hex color for shading
-        away (tuple[str, str]): Away team name and hex color for shading
-    """
-
-    plt.figure(figsize=(10, 6))
-    plt.plot(time_remaining, probabilities, color='black', linewidth=1)
-
-    plt.fill_between(time_remaining, probabilities, 0, color=home[1], alpha=0.4, label=home[0])
-    plt.fill_between(time_remaining, probabilities, 1, color=away[1], alpha=0.4, label=away[0])
-
-    plt.xlim(time_remaining.min(), time_remaining.max())
-    plt.ylim(0, 1.0)
-    plt.grid(False)
-    plt.gca().invert_xaxis()
-    plt.title("Home Team Win Probability Over Time")
-    plt.xlabel("Time Remaining (s)")
-    plt.ylabel("Win Probability")
-    plt.legend()
-    plt.grid()
-    plt.show()
-
 def convert_seconds_to_time_format(time_remaining: pd.Series | np.ndarray) -> list[tuple[str, int]]:
     tuples = []
     for t in time_remaining:
@@ -81,6 +51,7 @@ def convert_seconds_to_time_format(time_remaining: pd.Series | np.ndarray) -> li
 
 def graph_probabilities_plotly(time_elapsed: pd.Series | np.ndarray,
                                 probabilities: pd.Series | np.ndarray,
+                                scores: tuple[pd.Series | ndarray, pd.Series | ndarray],
                                 home: tuple[str, str],
                                 away: tuple[str, str]) -> go.Figure:
     """Generate and display win probability over time from home team perspective using Plotly.
@@ -88,6 +59,7 @@ def graph_probabilities_plotly(time_elapsed: pd.Series | np.ndarray,
     Args:
         time_elapsed (pd.Series | ndarray): Time elapsed in seconds
         probabilities (pd.Series | ndarray): Win probability for home team
+        scores (tuple[pd.Series | ndarray, pd.Series | ndarray]): Scores for home and away teams, respectively
         home (tuple[str, str]): Home team name and hex color for shading
         away (tuple[str, str]): Away team name and hex color for shading
     """
@@ -116,7 +88,7 @@ def graph_probabilities_plotly(time_elapsed: pd.Series | np.ndarray,
     ))
 
     # ugly but I got it to work and do not want to change it
-    hover_text = [f"Time: {x[0]}<br>Period: {x[1]}<br>Value: {y:.4f}<extra></extra>" for x, y in zip(convert_seconds_to_time_format(time_elapsed), probabilities)]
+    hover_text = [f"Time: {x[0]}<br>Period: {x[1]}<br>Score: {h} - {a}<br>Value: {y:.4f}<extra></extra>" for x, y, h, a in zip(convert_seconds_to_time_format(time_elapsed), probabilities, *scores)]
 
     # Line for probabilities
     fig.add_trace(go.Scatter(
