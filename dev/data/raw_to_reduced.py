@@ -56,8 +56,7 @@ regulation = games[games["Period"] < 4]
 events = slice_and_reduce.reduce_regulation(regulation, pbp)
 events.to_parquet(data_path / "regulation_pbp.parquet")
 
-# ignore shootout
-regular_ot = games[(games["Period"] == 4) & (games["Playoff"] == False)]
+regular_ot = games[(games["Period"] >= 4) & (games["Playoff"] == False)]
 events = slice_and_reduce.reduce_regular_overtime(regular_ot, pbp)
 events.to_parquet(data_path / "regular_ot_pbp.parquet")
 

@@ -83,7 +83,7 @@ def slice_regulation(games: pd.DataFrame, pbp: pd.DataFrame, slice_length: int =
 
 def reduce_plays(game: NamedTuple, pbp: pd.DataFrame, time_key: str, time_function: Callable[[int, int], int]) -> list[dict]:
     valid_events = ["FAC", "BLOCK", "SHOT", "GOAL", "MISS", "HIT", "GIVE", "TAKE"]
-    
+
     events = []
     for play in pbp.itertuples(index=False):
         # first event will always be a faceoff
@@ -124,7 +124,7 @@ def reduce_regular_overtime(games: pd.DataFrame, pbp: pd.DataFrame) -> pd.DataFr
     for game in tqdm(games.itertuples(index=False), total=len(games)):
         mask = ((pbp["Game_Id"] == game.Game_Id)
                 & (pbp["Season"] == game.Season)
-                & (pbp["Period"] == 4))
+                & (pbp["Period"] == 4))  # ignore shootout
         reduced = pbp[mask]
 
         seconds_elapsed = lambda x, y: y
@@ -148,7 +148,7 @@ def reduce_playoff_overtime(games: pd.DataFrame, pbp: pd.DataFrame) -> pd.DataFr
 if __name__ == "__main__":
     current_file_path = Path(__file__).resolve()
     data_path = current_file_path.parent / '..' / '..' / 'data'
-    
+
     games = pd.read_parquet(data_path / "game_elo.parquet")
     pbp = pd.read_parquet(data_path / "pbp_reduced.parquet")
 
@@ -159,8 +159,7 @@ if __name__ == "__main__":
     events = reduce_regulation(regulation, pbp)
     events.to_parquet(data_path / "regulation_pbp.parquet")
 
-    # ignore shootout
-    regular_ot = games[(games["Period"] == 4) & (games["Playoff"] == False)]
+    regular_ot = games[(games["Period"] >= 4) & (games["Playoff"] == False)]
     events = reduce_regular_overtime(regular_ot, pbp)
     events.to_parquet(data_path / "regular_ot_pbp.parquet")
 
