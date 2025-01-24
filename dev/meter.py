@@ -122,16 +122,26 @@ def predict_overtime(game: int, season: int, ot_pbp: pd.DataFrame, model, one_ho
     Returns:
         tuple[pd.Series, np.ndarray]: Time series and win probability
     """
-
+    window_size = 3
     mask = (ot_pbp["game"] == game) & (ot_pbp["season"] == season)
     selected_game = ot_pbp[mask]
 
-    # one-hot encode play-by-play and match columns to training data
     X = selected_game.drop(["seconds_elapsed"], axis=1)
+    # overtime finished in 2 plays? (minimum FAC, then GOAL)
+    while len(X) < window_size:
+        # copy game, season, and Elo columns
+        # generate remaining blank row and prepend
+        blank_row = X.iloc[:, :4].copy()
+        for col in X.columns[4:]:
+            blank_row[col] = None
+
+        X = pd.concat([blank_row, X], ignore_index=True)
+
+    # one-hot encode play-by-play and match columns to training data
     X_encoded = pd.get_dummies(X, columns=["event", "team", "event_zone", "home_zone", "strength"])
     X_encoded = X_encoded.reindex(columns=one_hot_columns, fill_value=False)
 
-    windows, targets = sliding_window_game_pbp(X_encoded, 3)
+    windows, targets = sliding_window_game_pbp(X_encoded, window_size)
 
     probabilities = model.predict(windows)
 
