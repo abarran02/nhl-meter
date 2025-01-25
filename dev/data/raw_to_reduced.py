@@ -28,7 +28,7 @@ for pbp, shift in zip(pbp_files, shift_files):
 
     pbp_list.append(pbp_df)
 
-pbp = pd.concat(pbp_list)
+pbp = pd.concat(pbp_list, ignore_index=True)
 pbp.to_parquet(data_path / 'pbp_combined.parquet')
 
 # tidy

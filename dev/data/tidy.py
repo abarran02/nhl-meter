@@ -73,18 +73,17 @@ def extract_games(pbp: pd.DataFrame) -> pd.DataFrame:
     Returns:
         pd.DataFrame: NHL game metadata
     """
-    games = pbp[['Game_Id', 'Season', 'Date', 'Home_Team', 'Home_Coach', 'Away_Team', 'Away_Coach', 'Event', 'Period', "Home_Score", "Away_Score"]]
-    games = games[games["Event"] == "GEND"]
-    games.drop(columns=['Event'], inplace=True)
+    reduced = pbp[['Game_Id', 'Season', 'Date', 'Home_Team', 'Home_Coach', 'Away_Team', 'Away_Coach', 'Period', 'Home_Score', 'Away_Score']]
 
-    # determine whether each game is regular season or playoff
-    playoff = []
-    for game in games.itertuples(index=False):
-        season =  game.Season
-        playoff.append(game.Date >= playoff_dates[season])
-    games['Playoff'] = playoff
+    # extract the last rows of each group and determine playoffs boolean
+    # previously used GEND event but this is missing from some games, like 20003.2007
+    games = []
+    for name, game in reduced.groupby(['Season', 'Game_Id']):
+        last_play = game.iloc[-1].copy()
+        last_play['Playoff'] = last_play.Date >= playoff_dates[last_play.Season]
+        games.append(last_play)
 
-    return games
+    return pd.DataFrame(games)
 
 def extract_players(pbp: pd.DataFrame) -> pd.DataFrame:
     """Mapping between NHL player names and IDs
