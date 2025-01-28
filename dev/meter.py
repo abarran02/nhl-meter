@@ -102,7 +102,7 @@ def predict_regulation(game: int, season: int, slices: pd.DataFrame, model) -> t
 
     X = selected_game.drop(columns=["winner", "game", "season"])
 
-    probabilities = model.predict(X)
+    probabilities = model.predict(X, verbose=0)
 
     # convert from normalized 1 to 0
     time_elapsed = 3600 - (selected_game["time_remaining"] * 3600)
@@ -143,6 +143,6 @@ def predict_overtime(game: int, season: int, ot_pbp: pd.DataFrame, model, one_ho
 
     windows, targets = sliding_window_game_pbp(X_encoded, window_size)
 
-    probabilities = model.predict(windows)
+    probabilities = model.predict(windows, verbose=0)
 
     return (3600 + selected_game["seconds_elapsed"], probabilities.flatten())

@@ -49,6 +49,15 @@ python app.py
 
 The web app will be available at `http://localhost:8050/`
 
+### Docker
+
+The container uses the `python:3.11.9-slim` image and installs packages required for prediction and visualization.
+
+```sh
+docker build -t nhl-meter .
+docker run -h localhost -p 8050:8050 -d nhl-meter
+```
+
 ### Scraping, Cleaning, and Training
 
 1. Scrape play-by-play and shift data from NHL API.
