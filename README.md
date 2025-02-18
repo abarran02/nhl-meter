@@ -71,3 +71,14 @@ docker run -h localhost -p 8050:8050 -d nhl-meter
     ```
 3. Train the regulation model using [lstm.ipynb](./dev/lstm.ipynb) and the overtime model using [lstm_ot.ipynb](./dev/lstm_ot.ipynb).
     The new models are ready to be used with the dashboard.
+
+### Testing
+
+To run the test files using `pytest`:
+```sh
+pytest tests/test_callbacks.py
+pytest tests/test_prediction.py
+```
+
+`test_callbacks.py` will test the Dash app functionality.
+`test_prediction.py` will run the appropriate win prediction models on all games (~22,000) in the dataset.
